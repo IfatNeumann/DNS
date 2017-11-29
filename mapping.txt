@@ -1,0 +1,2 @@
+www.biu.ac.il A 1.2.3.4 1000
+biu.ac.il NS ns.biu.ac.il 65241
