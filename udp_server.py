@@ -2,7 +2,7 @@ from socket import socket, AF_INET, SOCK_DGRAM
 import sys
 import time
 
-def findUrl(url):
+def findInMapping(url):
     if key in mappingDict:
         msg = mappingDict[key][2]
         s.sendto(msg, sender_info)
@@ -36,13 +36,15 @@ while True:
     #search in dict
     key = data.split(',')[0][1:]
     url = key[key.find('.') + 1:]
-    while findUrl(key) == False and url.find('.')!=-1: #search NS
+    #search ns.bob.com -> ns.com
+    while findInMapping(key) == False and url.find('.')!=-1: #search NS
         print url.find('.')
         url = url[url.find('.')+1:]
         print url
         key = "ns."+ url
-        #search ns.bob.com -> ns.com
-        #if resolver:
-     #   s.sendto(msg, (source_ip, source_port))
+    # search in other servers
+
+    #if resolver:
+    #   s.sendto(msg, (source_ip, source_port))
 
 
