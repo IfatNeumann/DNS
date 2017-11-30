@@ -1,0 +1,3 @@
+ac.il NS ns.ac.il 65242
+co.il NS ns.co.il 65243
+com NS ns.com 65245
