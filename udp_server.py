@@ -1,11 +1,9 @@
 from socket import socket, AF_INET, SOCK_DGRAM
 import sys
 import time
-
+#local
 def findInMapping(url):
     if key in mappingDict:
-        msg = mappingDict[key][2]
-        s.sendto(msg, sender_info)
         return True
     else:
         return False
@@ -26,24 +24,33 @@ for line in mappingFile:
     l = line.split()
     mappingDict[l[0]] = l
 # add root to the dictionary
-mappingDict[l[0]] = str(sys.argv[1])
+mappingDict['root'] = str(sys.argv[1])
 
 s.bind((source_ip, source_port))
 while True:
     data, sender_info = s.recvfrom(2048)
     print "Message: ", data, " from: ", sender_info, time.clock()
     #s.sendto(data.upper(), sender_info)
-    #search in dict
+    # search www.bob.com
     key = data.split(',')[0][1:]
-    url = key[key.find('.') + 1:]
-    #search ns.bob.com -> ns.com
-    while findInMapping(key) == False and url.find('.')!=-1: #search NS
-        print url.find('.')
-        url = url[url.find('.')+1:]
-        print url
-        key = "ns."+ url
-    # search in other servers
-
+    if findInMapping(key) == True:
+        msg = mappingDict[key][2]
+        s.sendto(msg, sender_info)
+    else:
+        #search bob.com -> com
+        key = key[key.find('.') + 1:]
+        while findInMapping(key) == False and key.find('.')!=-1: #search NS
+            key = key[key.find('.')+1:]
+        # search in other servers
+        # if found = send message
+        if findInMapping(key) == True:
+            msg = mappingDict[key][2]
+            s.sendto(msg, sender_info) #iterate or recursive
+        #if not found - try root
+        else:
+            print mappingDict['root']
+            s.sendto(data, ('127.0.0.1',int(mappingDict['root'])))
+            print "hi"
     #if resolver:
     #   s.sendto(msg, (source_ip, source_port))
 
