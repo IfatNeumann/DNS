@@ -2,4 +2,6 @@ ac.il NS ns.ac.il 1000
 co.il NS ns.co.il 1000
 com NS ns.com 1000
 ns.com A 65247 1000
+ns.ac.il A 12245 1000
+ac.il NS ns.ac.il 1000
 www.biu.ac.il A 1.2.3.4 1000
