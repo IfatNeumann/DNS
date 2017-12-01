@@ -8,34 +8,58 @@ def findInMapping(url):
     else:
         return False
 
-def findAnswer(data,sender_info,s):
+def findAnswerNotResolver(data,sender_info,s):
     dataCopy = data.split(',')
     print dataCopy[0]
     # search www.bob.com -> bob.com -> com
     key = data.split(',')[0][1:]
     while findInMapping(key) == False and key.find('.') != -1:  # search NS
         key = key[key.find('.') + 1:]
-    # search in other servers
     # if found = send message
     if findInMapping(key) == True:
-        msg = mappingDict[key][2]
-        s.sendto(msg, sender_info)  # iterate or recursive
-    # if not found or got to the end of the url - try root
+        msg = mappingDict[key]
+    # if not found or got to the end of the url - send IDK
+    else:
+        msg = "IDK"
+    s.sendto(msg, sender_info)
+
+def findAnswerResolver(data,sender_info,s,source_ip,source_port):
+    dataCopy = data.split(',')
+    print dataCopy[0]
+    # search www.bob.com -> bob.com -> com
+    key = data.split(',')[0][1:]
+    # if found the url = send to the client
+    if findInMapping(key) == True:
+        msg = mappingDict[key]
+        s.sendto(msg, sender_info)
+
+    while findInMapping(key) == False and key.find('.') != -1:  # search NS
+        key = key[key.find('.') + 1:]
+
+# ask other servers
+    # if found = send message to him
+    if findInMapping(key) == True:
+        server = mappingDict[key]
+        s.sendto(data, ('127.0.0.1',server[3]))
+    # if not found or got to the end of the url - send message to root
     else:
         s.sendto(data, ('127.0.0.1', int(mappingDict['root'])))
+    recursive(data,s)
+
+def recursive(data,s):
+    #get answer
     newData, newSender_info = s.recvfrom(2048)
     print "Message: ", newData, " from: ", newSender_info, time.clock()
-    # save in cache
-    newData = newData.split(',')
-    mappingDict[newData[0]] = newData
-    # if it's tha answer - return to the client
+    #if = key - return
     if newData[0] == dataCopy[0]:
         return
-    else:
-        findAnswer(data, sender_info, s)
-
-
-                #   s.sendto(msg, (source_ip, source_port))
+    #else - GOT NEW DESTINATION
+    #save in cache
+    newData = newData.split(',')
+    mappingDict[newData[0]] = newData
+    # send him the data (newData = new dest)
+    s.sendto(data, newData)
+    recursive(data,s)
 
 # initialize resolver
 resolver = False
@@ -58,7 +82,7 @@ s.bind((source_ip, source_port))
 while True:
     data, sender_info = s.recvfrom(2048)
     print "Message: ", data, " from: ", sender_info, time.clock()
-    findAnswer(data,sender_info,s)
+    findAnswerResolver(data,sender_info,s,source_ip,source_port)
     dataCopy = data.split(',')
     s.sendto(mappingDict[dataCopy[0]], sender_info)
 
