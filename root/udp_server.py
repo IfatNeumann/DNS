@@ -44,10 +44,8 @@ def findAnswerResolver(data,sender_info,s,source_ip,source_port):
     dataCopy = data[-1:1].split(',')
     # search www.bob.com -> bob.com -> com
     key = data.split(',')[0][1:]
-    # if found the url = send to the client
+    # if found the url - return
     if findInMapping(key) == True and timeStampCheck(key):
-        msg = str(mappingDict[key])
-        s.sendto(msg, sender_info)
         return True
     while findInMapping(key) == False and timeStampCheck(key) and key.find('.') != -1:  # search NS
         key = key[key.find('.') + 1:]
@@ -83,7 +81,7 @@ def recursive(data,s):
     #if = key - return
     if newKey == dataCopy[0]:
         newData = ast.literal_eval(newData)
-        newData.append(time.clock())
+        newData[4] = time.clock()
         mappingDict[newKey] = newData
         return True
     #else - GOT NEW DESTINATION
