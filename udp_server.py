@@ -51,7 +51,7 @@ def findAnswerResolver(data,sender_info,s,source_ip,source_port):
     # if not found or got to the end of the url - send message to root
     else:
         s.sendto(data, ('127.0.0.1', int(mappingDict['root'])))
-    recursive(data,s)
+    return recursive(data,s)
 
 def recursive(data,s):
     dataCopy = data[1:-1].split(',')
@@ -59,6 +59,8 @@ def recursive(data,s):
     newData, newSender_info = s.recvfrom(2048)
     print "Message: ", newData, " from: ", newSender_info, time.clock()
     first=""
+    if newData == "not found":
+        return False
     if newData.find('\n')!=-1:
         first = newData[:newData.find('\n')]
         #add to dict
@@ -69,14 +71,14 @@ def recursive(data,s):
     #if = key - return
     if newKey == dataCopy[0]:
         mappingDict[newKey] = ast.literal_eval(newData)
-        return
+        return True
     #else - GOT NEW DESTINATION
     #save in cache
     newData = ast.literal_eval(newData)
     mappingDict[newData[0]] = newData
     # send him the data (newData = new dest)
     s.sendto(data, ('127.0.0.1', int(newData[2])))
-    recursive(data,s)
+    return recursive(data,s)
 
 # initialize resolver
 resolver = False
@@ -100,9 +102,11 @@ while True:
     data, sender_info = s.recvfrom(2048)
     print "Message: ", data, " from: ", sender_info, time.clock()
     if resolver:
-        findAnswerResolver(data,sender_info,s,source_ip,source_port)
-        dataCopy = data[1:-1].split(',')
-        s.sendto(str(mappingDict[dataCopy[0]]), sender_info)
+        if findAnswerResolver(data,sender_info,s,source_ip,source_port):
+            dataCopy = data[1:-1].split(',')
+            s.sendto(str(mappingDict[dataCopy[0]]), sender_info)
+        else:
+            s.sendto("not found", sender_info)
     else:
         findAnswerNotResolver(data, sender_info, s)
 
