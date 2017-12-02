@@ -11,7 +11,6 @@ def findInMapping(url):
 
 def findAnswerNotResolver(data,sender_info,s):
     dataCopy = data[1:-1].split(',')
-    print dataCopy[0]
     # search www.bob.com -> bob.com -> com
     key = data.split(',')[0][1:]
     while findInMapping(key) == False and key.find('.') != -1:  # search NS

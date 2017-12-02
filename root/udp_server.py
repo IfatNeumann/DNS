@@ -11,7 +11,6 @@ def findInMapping(url):
 
 def findAnswerNotResolver(data,sender_info,s):
     dataCopy = data[1:-1].split(',')
-    print dataCopy[0]
     # search www.bob.com -> bob.com -> com
     key = data.split(',')[0][1:]
     while findInMapping(key) == False and key.find('.') != -1:  # search NS
@@ -59,17 +58,21 @@ def recursive(data,s):
     #get answer
     newData, newSender_info = s.recvfrom(2048)
     print "Message: ", newData, " from: ", newSender_info, time.clock()
-    newKey = newData[1:-1].split(',')[0]
-    newKey = newKey[1:-1]
-    print "test:" + str(ast.literal_eval(newData))
+    first=""
+    if newData.find('\n')!=-1:
+        first = newData[:newData.find('\n')]
+        #add to dict
+        newKey = newData[1:-1].split(',')[0][1:-1]
+        mappingDict[newKey] = ast.literal_eval(first)
+        newData = newData[newData.find('\n')+1:]
+    newKey = newData[1:-1].split(',')[0][1:-1]
     #if = key - return
     if newKey == dataCopy[0]:
         mappingDict[newKey] = ast.literal_eval(newData)
         return
     #else - GOT NEW DESTINATION
-    print "need to fix here"
     #save in cache
-    newData = newData.split(',')
+    newData = ast.literal_eval(newData)
     mappingDict[newData[0]] = newData
     # send him the data (newData = new dest)
     s.sendto(data, ('127.0.0.1', int(newData[2])))
@@ -83,7 +86,6 @@ if str(sys.argv[2]) == "resolver":
 s = socket(AF_INET, SOCK_DGRAM)
 source_ip = '0.0.0.0'
 source_port = 12125
-
 # save mapping's data in a dictionary
 mappingFile=open("mapping.txt","r")
 mappingDict = {}
