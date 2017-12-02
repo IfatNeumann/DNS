@@ -3,6 +3,17 @@ import sys
 import time
 import ast
 #local
+
+def timeStampCheck(key):
+    if findInMapping(key) == False:
+        return False
+    timeStamp = mappingDict[key][4]
+    ttl = mappingDict[key][3]
+    if timeStamp != '-1' and (time.clock() - float(timeStamp) > float(ttl) ):
+        del mappingDict[key]
+        return False
+    return  True
+
 def findInMapping(url):
     if url in mappingDict:
         return True
@@ -31,20 +42,19 @@ def findAnswerNotResolver(data,sender_info,s):
 
 def findAnswerResolver(data,sender_info,s,source_ip,source_port):
     dataCopy = data[-1:1].split(',')
-    print dataCopy[0]
     # search www.bob.com -> bob.com -> com
     key = data.split(',')[0][1:]
     # if found the url = send to the client
-    if findInMapping(key) == True:
-        msg = mappingDict[key]
+    if findInMapping(key) == True and timeStampCheck(key):
+        msg = str(mappingDict[key])
         s.sendto(msg, sender_info)
-
-    while findInMapping(key) == False and key.find('.') != -1:  # search NS
+        return True
+    while findInMapping(key) == False and timeStampCheck(key) and key.find('.') != -1:  # search NS
         key = key[key.find('.') + 1:]
 
 # ask other servers
     # if found = send message to him
-    if findInMapping(key) == True:
+    if findInMapping(key) and timeStampCheck(key):
         nsUrl = mappingDict[key][2]
         server = mappingDict[nsUrl]
         s.sendto(data, ('127.0.0.1',server[3]))
@@ -63,18 +73,23 @@ def recursive(data,s):
         return False
     if newData.find('\n')!=-1:
         first = newData[:newData.find('\n')]
+        first = ast.literal_eval(first)
+        first.append(time.clock())
         #add to dict
         newKey = newData[1:-1].split(',')[0][1:-1]
-        mappingDict[newKey] = ast.literal_eval(first)
+        mappingDict[newKey] = first
         newData = newData[newData.find('\n')+1:]
     newKey = newData[1:-1].split(',')[0][1:-1]
     #if = key - return
     if newKey == dataCopy[0]:
-        mappingDict[newKey] = ast.literal_eval(newData)
+        newData = ast.literal_eval(newData)
+        newData.append(time.clock())
+        mappingDict[newKey] = newData
         return True
     #else - GOT NEW DESTINATION
     #save in cache
     newData = ast.literal_eval(newData)
+    newData.append(time.clock())
     mappingDict[newData[0]] = newData
     # send him the data (newData = new dest)
     s.sendto(data, ('127.0.0.1', int(newData[2])))
@@ -94,6 +109,7 @@ mappingFile=open("mapping.txt","r")
 mappingDict = {}
 for line in mappingFile:
     l = line.split()
+    l.append('-1')
     mappingDict[l[0]] = l
 # add root to the dictionary
 mappingDict['root'] = str(sys.argv[1])

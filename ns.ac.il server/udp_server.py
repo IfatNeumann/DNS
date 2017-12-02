@@ -3,6 +3,17 @@ import sys
 import time
 import ast
 #local
+
+def timeStampCheck(key):
+    if findInMapping(key) == False:
+        return False
+    timeStamp = mappingDict[key][4]
+    ttl = mappingDict[key][3]
+    if timeStamp != '-1' and (time.clock() - float(timeStamp) > float(ttl) ):
+        del mappingDict[key]
+        return False
+    return  True
+
 def findInMapping(url):
     if url in mappingDict:
         return True
@@ -31,27 +42,26 @@ def findAnswerNotResolver(data,sender_info,s):
 
 def findAnswerResolver(data,sender_info,s,source_ip,source_port):
     dataCopy = data[-1:1].split(',')
-    print dataCopy[0]
     # search www.bob.com -> bob.com -> com
     key = data.split(',')[0][1:]
     # if found the url = send to the client
-    if findInMapping(key) == True:
-        msg = mappingDict[key]
+    if findInMapping(key) == True and timeStampCheck(key):
+        msg = str(mappingDict[key])
         s.sendto(msg, sender_info)
-
-    while findInMapping(key) == False and key.find('.') != -1:  # search NS
+        return True
+    while findInMapping(key) == False and timeStampCheck(key) and key.find('.') != -1:  # search NS
         key = key[key.find('.') + 1:]
 
 # ask other servers
     # if found = send message to him
-    if findInMapping(key) == True:
+    if findInMapping(key) and timeStampCheck(key):
         nsUrl = mappingDict[key][2]
         server = mappingDict[nsUrl]
         s.sendto(data, ('127.0.0.1',server[3]))
     # if not found or got to the end of the url - send message to root
     else:
         s.sendto(data, ('127.0.0.1', int(mappingDict['root'])))
-    recursive(data,s)
+    return recursive(data,s)
 
 def recursive(data,s):
     dataCopy = data[1:-1].split(',')
@@ -59,24 +69,31 @@ def recursive(data,s):
     newData, newSender_info = s.recvfrom(2048)
     print "Message: ", newData, " from: ", newSender_info, time.clock()
     first=""
+    if newData == "not found":
+        return False
     if newData.find('\n')!=-1:
         first = newData[:newData.find('\n')]
+        first = ast.literal_eval(first)
+        first.append(time.clock())
         #add to dict
         newKey = newData[1:-1].split(',')[0][1:-1]
-        mappingDict[newKey] = ast.literal_eval(first)
+        mappingDict[newKey] = first
         newData = newData[newData.find('\n')+1:]
     newKey = newData[1:-1].split(',')[0][1:-1]
     #if = key - return
     if newKey == dataCopy[0]:
-        mappingDict[newKey] = ast.literal_eval(newData)
-        return
+        newData = ast.literal_eval(newData)
+        newData.append(time.clock())
+        mappingDict[newKey] = newData
+        return True
     #else - GOT NEW DESTINATION
     #save in cache
     newData = ast.literal_eval(newData)
+    newData.append(time.clock())
     mappingDict[newData[0]] = newData
     # send him the data (newData = new dest)
     s.sendto(data, ('127.0.0.1', int(newData[2])))
-    recursive(data,s)
+    return recursive(data,s)
 
 # initialize resolver
 resolver = False
@@ -92,6 +109,7 @@ mappingFile=open("mapping.txt","r")
 mappingDict = {}
 for line in mappingFile:
     l = line.split()
+    l.append('-1')
     mappingDict[l[0]] = l
 # add root to the dictionary
 mappingDict['root'] = str(sys.argv[1])
@@ -100,9 +118,11 @@ while True:
     data, sender_info = s.recvfrom(2048)
     print "Message: ", data, " from: ", sender_info, time.clock()
     if resolver:
-        findAnswerResolver(data,sender_info,s,source_ip,source_port)
-        dataCopy = data[1:-1].split(',')
-        s.sendto(str(mappingDict[dataCopy[0]]), sender_info)
+        if findAnswerResolver(data,sender_info,s,source_ip,source_port):
+            dataCopy = data[1:-1].split(',')
+            s.sendto(str(mappingDict[dataCopy[0]]), sender_info)
+        else:
+            s.sendto("not found", sender_info)
     else:
         findAnswerNotResolver(data, sender_info, s)
 
