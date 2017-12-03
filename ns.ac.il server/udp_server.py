@@ -4,8 +4,10 @@ import time
 import ast
 #local
 
+# check if the ttl passed, and if so - delete from cache.
+# return true if the key is ok, and false otherwise
 def timeStampCheck(key):
-    if findInMapping(key) == False:
+    if findInMapping(key)==False:
         return False
     timeStamp = mappingDict[key][4]
     ttl = mappingDict[key][3]
@@ -47,15 +49,18 @@ def findAnswerResolver(data,sender_info,s,source_ip,source_port):
     # if found the url - return
     if findInMapping(key) == True and timeStampCheck(key):
         return True
-    while findInMapping(key) == False and timeStampCheck(key) and key.find('.') != -1:  # search NS
+    print "key: "+key+"findInMapping(key): "+str(findInMapping(key))+"timeStampCheck(key): "+str(timeStampCheck(key))
+    # while the key is not in the cache or it is but the ttl passed:
+    while (findInMapping(key) == False or (findInMapping(key) and timeStampCheck(key)==False)) and key.find('.') != -1:  # search NS
         key = key[key.find('.') + 1:]
-
+        print "inside while: "+key
 # ask other servers
     # if found = send message to him
     if findInMapping(key) and timeStampCheck(key):
         nsUrl = mappingDict[key][2]
         server = mappingDict[nsUrl]
-        s.sendto(data, ('127.0.0.1',server[3]))
+        print str(server)
+        s.sendto(data, ('127.0.0.1',int(server[2])))
     # if not found or got to the end of the url - send message to root
     else:
         s.sendto(data, ('127.0.0.1', int(mappingDict['root'])))

@@ -105,7 +105,7 @@ if str(sys.argv[2]) == "resolver":
 
 s = socket(AF_INET, SOCK_DGRAM)
 source_ip = '0.0.0.0'
-source_port = 12125
+source_port = 12245
 
 # save mapping's data in a dictionary
 mappingFile=open("mapping.txt","r")
