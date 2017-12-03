@@ -67,7 +67,7 @@ def recursive(data,s):
     dataCopy = data[1:-1].split(',')
     #get answer
     newData, newSender_info = s.recvfrom(2048)
-    print "Message: ", newData, " from: ", newSender_info, time.clock()
+    print "Message: ", newData, " from: ", newSender_info
     if newData == "not found":
         return False
     # if we got a GluedRR massage

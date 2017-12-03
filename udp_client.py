@@ -23,7 +23,7 @@ dest_port = int(sys.argv[2])
 # create cache for the client
 cache = {}
 
-msg = raw_input("Message to send: ")
+msg = raw_input("Request: ")
 while not msg == 'quit':
     key = msg.split(',')[0][1:]
     if findInCache(key):
@@ -38,5 +38,5 @@ while not msg == 'quit':
         data = ast.literal_eval(data)
         data[4] = time.clock()
         cache[key] = data
-    msg = raw_input("Message to send: ")
+    msg = raw_input("Request: ")
 s.close()
