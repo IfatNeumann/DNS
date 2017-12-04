@@ -2,7 +2,6 @@ from socket import socket, AF_INET, SOCK_DGRAM
 import sys
 import time
 import ast
-#local
 #arguments: [my IP] [my port] [mapping file name] [my root server] [resolver or not]
 
 # check if the ttl passed, and if so - delete from cache.
