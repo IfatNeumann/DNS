@@ -6,8 +6,6 @@ import ast
 def findInCache(key):
     if not (key in cache):
         return False
-    if len(cache[key])<2:
-        return False
     timeStamp = cache[key][4]
     ttl = cache[key][3]
     if timeStamp != '-1' and (time.clock() - float(timeStamp) > float(ttl) ):

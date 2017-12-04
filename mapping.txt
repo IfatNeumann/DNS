@@ -1,2 +1,3 @@
 co.il NS ns.co.il 1000
 ns.co.il A 45654 1000
+www.biu.ac.il A 1.2.3.4 0.000000000000000001000
