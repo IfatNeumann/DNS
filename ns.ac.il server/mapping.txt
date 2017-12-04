@@ -2,5 +2,3 @@ co.il NS ns.co.il 1000
 ns.co.il A 45654 1000
 ns.biu.ac.il A 12245 1000
 biu.ac.il NS ns.biu.ac.il 1000
-www.ifat.ac.il A 1.1.2.2 1000
-www.biu.ac.il A 1.2.3.4 1000

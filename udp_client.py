@@ -32,11 +32,11 @@ while not msg == 'quit':
         s.sendto(msg, (dest_ip,dest_port))
         data, _ = s.recvfrom(2048)
         print "Server sent: ", data
-
-        # add to cache
-        key = data[1:-1].split(',')[0][1:-1]
-        data = ast.literal_eval(data)
-        data[4] = time.clock()
-        cache[key] = data
+        if not(data=="not found"):
+            # add to cache
+            key = data[1:-1].split(',')[0][1:-1]
+            data = ast.literal_eval(data)
+            data[4] = time.clock()
+            cache[key] = data
     msg = raw_input("Request: ")
 s.close()

@@ -46,20 +46,20 @@ def findAnswerResolver(data,sender_info,s,source_ip,source_port):
     # if found the url - return
     if key in cache:
         return True
-
+    answer = False
     # while the key is not in the cache or it is but the ttl passed:
-    while findInCache(key) == False and key.find('.') != -1:
+    while key.find('.') != -1 and answer==False:
         # search NS
-        key = key[key.find('.') + 1:]
-# ask other servers
-
-    # if found = send message to him
-    if findInCache(key):
-        nsUrl = cache[key][2]
-        server = cache[nsUrl]
-        s.sendto(data, ('127.0.0.1',int(server[2])))
+        if findInCache(key):
+            nsUrl = cache[key][2]
+            server = cache[nsUrl]
+            s.sendto(data, ('127.0.0.1', int(server[2])))
+            answer =  recursive(data, s)
+        else:
+            key = key[key.find('.') + 1:]
+# the servers in the cache didn't have answer - ask root:
     # if not found or got to the end of the url - send message to root
-    else:
+    if answer==False:
         s.sendto(data, ('127.0.0.1', int(cache['root'])))
     return recursive(data,s)
 
@@ -67,7 +67,7 @@ def recursive(data,s):
     dataCopy = data[1:-1].split(',')
     #get answer
     newData, newSender_info = s.recvfrom(2048)
-    print "Message: ", newData, " from: ", newSender_info, time.clock()
+    print "Message: ", newData, " from: ", newSender_info
     if newData == "not found":
         return False
     # if we got a GluedRR massage
