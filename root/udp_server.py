@@ -46,20 +46,20 @@ def findAnswerResolver(data,sender_info,s,source_ip,source_port):
     # if found the url - return
     if key in cache:
         return True
-    answer = False
+
     # while the key is not in the cache or it is but the ttl passed:
-    while key.find('.') != -1 and answer==False:
+    while findInCache(key) == False and key.find('.') != -1:
         # search NS
-        if findInCache(key):
-            nsUrl = cache[key][2]
-            server = cache[nsUrl]
-            s.sendto(data, ('127.0.0.1', int(server[2])))
-            answer =  recursive(data, s)
-        else:
-            key = key[key.find('.') + 1:]
-# the servers in the cache didn't have answer - ask root:
+        key = key[key.find('.') + 1:]
+# ask other servers
+
+    # if found = send message to him
+    if findInCache(key):
+        nsUrl = cache[key][2]
+        server = cache[nsUrl]
+        s.sendto(data, ('127.0.0.1',int(server[2])))
     # if not found or got to the end of the url - send message to root
-    if answer==False:
+    else:
         s.sendto(data, ('127.0.0.1', int(cache['root'])))
     return recursive(data,s)
 
